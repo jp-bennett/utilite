@@ -1,0 +1,125 @@
+diff --git a/board/compulab/cm_fx6/cm_fx6.c b/board/compulab/cm_fx6/cm_fx6.c
+index fdb8ebf..b3034eb 100644
+--- a/board/compulab/cm_fx6/cm_fx6.c
++++ b/board/compulab/cm_fx6/cm_fx6.c
+@@ -316,12 +316,36 @@ static int handle_mac_address(void)
+ 	return eth_setenv_enetaddr("ethaddr", enetaddr);
+ }
+ 
++static int handle_igb_mac_address(void)
++{
++	unsigned char enetaddr[6];
++	int rc;
++
++	rc = eth_getenv_enetaddr("eth1addr", enetaddr);
++	if (rc)
++		return 0;
++
++	rc = cl_igb_eeprom_read_mac_addr(enetaddr);
++	if (rc)
++		return rc;
++
++	if (!is_valid_ether_addr(enetaddr))
++		return -1;
++
++	return eth_setenv_enetaddr("eth1addr", enetaddr);
++}
++
++
+ int board_eth_init(bd_t *bis)
+ {
+ 	int res = handle_mac_address();
+ 	if (res)
+ 		puts("No MAC address found\n");
+ 
++	res = handle_igb_mac_address();
++	if (res)
++		puts("No MAC address found\n");
++
+ 	SETUP_IOMUX_PADS(enet_pads);
+ 	/* phy reset */
+ 	gpio_direction_output(CM_FX6_ENET_NRST, 0);
+@@ -404,6 +428,14 @@ void ft_board_setup(void *blob, bd_t *bd)
+ 		fdt_find_and_setprop(blob, "/fec", "local-mac-address",
+ 				     enetaddr, 6, 1);
+ 	}
++
++
++	/* MAC addr */
++	if (eth_getenv_enetaddr("eth1addr", enetaddr)) {
++		fdt_find_and_setprop(blob, "/eth@pcie", "local-mac-address",
++			enetaddr, 6, 1);
++	}
++
+ }
+ #endif
+ 
+diff --git a/board/compulab/common/eeprom.c b/board/compulab/common/eeprom.c
+index 85442cd..99e0596 100644
+--- a/board/compulab/common/eeprom.c
++++ b/board/compulab/common/eeprom.c
+@@ -46,6 +46,20 @@ static int cl_eeprom_read(uint offset, uchar *buf, int len)
+ 	return res;
+ }
+ 
++static int cl_igb_eeprom_read(uint offset, uchar *buf, int len)
++{
++	int res;
++	unsigned int current_i2c_bus = i2c_get_bus_num();
++
++	i2c_set_bus_num(CONFIG_SYS_I2C_IGB_EEPROM_BUS);
++	res = i2c_read(CONFIG_SYS_I2C_EEPROM_ADDR, offset,
++                        CONFIG_SYS_I2C_EEPROM_ADDR_LEN, buf, len);
++
++	i2c_set_bus_num(current_i2c_bus);
++
++	return res;
++}
++
+ static int cl_eeprom_setup_layout(void)
+ {
+ 	int res;
+@@ -105,6 +119,19 @@ int cl_eeprom_read_mac_addr(uchar *buf)
+ 	return cl_eeprom_read(offset, buf, 6);
+ }
+ 
++int cl_igb_eeprom_read_mac_addr(uchar *buf)
++{
++	uint offset;
++
++	if (cl_eeprom_setup_layout())
++		return 0;
++
++	offset = (cl_eeprom_layout != LAYOUT_LEGACY) ?
++		MAC_ADDR_OFFSET : MAC_ADDR_OFFSET_LEGACY;
++
++	return cl_igb_eeprom_read(offset, buf, 6);
++}
++
+ /*
+  * Routine: cl_eeprom_get_board_rev
+  * Description: read system revision from eeprom
+diff --git a/board/compulab/common/eeprom.h b/board/compulab/common/eeprom.h
+index 85d5bf0..3f16218 100644
+--- a/board/compulab/common/eeprom.h
++++ b/board/compulab/common/eeprom.h
+@@ -12,6 +12,7 @@
+ 
+ #ifdef CONFIG_SYS_I2C
+ int cl_eeprom_read_mac_addr(uchar *buf);
++int cl_igb_eeprom_read_mac_addr(uchar *buf);
+ u32 cl_eeprom_get_board_rev(void);
+ #else
+ static inline int cl_eeprom_read_mac_addr(uchar *buf)
+diff --git a/include/configs/cm_fx6.h b/include/configs/cm_fx6.h
+index 10d02b4..695c0fa 100644
+--- a/include/configs/cm_fx6.h
++++ b/include/configs/cm_fx6.h
+@@ -245,6 +245,7 @@
+ #define CONFIG_SYS_I2C_EEPROM_ADDR	0x50
+ #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN	1
+ #define CONFIG_SYS_I2C_EEPROM_BUS	2
++#define CONFIG_SYS_I2C_IGB_EEPROM_BUS	0
+ 
+ /* SATA */
+ #define CONFIG_CMD_SATA
