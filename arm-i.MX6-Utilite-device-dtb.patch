@@ -957,49 +957,6 @@ index d28dc25..4292fac 100644
 +obj-$(CONFIG_SND_SOC_IMX_WM8731) += snd-soc-imx-wm8731.o
  obj-$(CONFIG_SND_SOC_IMX_SPDIF) += snd-soc-imx-spdif.o
  obj-$(CONFIG_SND_SOC_IMX_MC13783) += snd-soc-imx-mc13783.o
-diff --git a/sound/soc/fsl/fsl-asoc-card.c b/sound/soc/fsl/fsl-asoc-card.c
-index 007c772..25f7fa2e 100644
---- a/sound/soc/fsl/fsl-asoc-card.c
-+++ b/sound/soc/fsl/fsl-asoc-card.c
-@@ -391,6 +391,8 @@ static int fsl_asoc_card_probe(struct platform_device *pdev)
- 	struct fsl_asoc_card_priv *priv;
- 	struct i2c_client *codec_dev;
- 	struct clk *codec_clk;
-+	struct clk *new_parent;
-+	struct clk *ssi_clk;
- 	u32 width;
- 	int ret;
- 
-@@ -452,6 +454,21 @@ static int fsl_asoc_card_probe(struct platform_device *pdev)
- 	} else if (of_device_is_compatible(np, "fsl,imx-audio-sgtl5000")) {
- 		priv->codec_priv.mclk_id = SGTL5000_SYSCLK;
- 		priv->dai_fmt |= SND_SOC_DAIFMT_CBM_CFM;
-+/*	} else if (of_device_is_compatible(np, "fsl,imx-audio-wm8731")) {
-+	new_parent = devm_clk_get(&pdev->dev, "pll4");
-+		if (IS_ERR(new_parent))
-+			pr_err("Could not get \"pll4\" clock\n");
-+		ssi_clk = devm_clk_get(&pdev->dev, "imx-ssi.1");
-+		if (IS_ERR(ssi_clk))
-+			pr_err("Could not get \"imx-ssi.1\" clock\n");
-+		clk_set_parent(ssi_clk, new_parent);
-+		data->pll = new_parent;
-+		data->clock_root = ssi_clk;
-+		data->current_rate = 0;
-+		data->sysclk = 0;
-+		priv->cpu_priv.sysclk_dir[TX] = SND_SOC_CLOCK_OUT;
-+		priv->cpu_priv.sysclk_dir[RX] = SND_SOC_CLOCK_OUT;
-+		priv->dai_fmt |= SND_SOC_DAIFMT_CBS_CFS; */
- 	} else if (of_device_is_compatible(np, "fsl,imx-audio-wm8962")) {
- 		priv->card.set_bias_level = fsl_asoc_card_set_bias_level;
- 		priv->codec_priv.mclk_id = WM8962_SYSCLK_MCLK;
-@@ -555,6 +572,7 @@ static const struct of_device_id fsl_asoc_card_dt_ids[] = {
- 	{ .compatible = "fsl,imx-audio-cs42888", },
- 	{ .compatible = "fsl,imx-audio-sgtl5000", },
- 	{ .compatible = "fsl,imx-audio-wm8962", },
-+	/*{ .compatible = "fsl,imx-audio-wm8731", },*/
- 	{}
- };
- 
 diff --git a/sound/soc/fsl/imx-wm8731.c b/sound/soc/fsl/imx-wm8731.c
 new file mode 100644
 index 0000000..11417a3
