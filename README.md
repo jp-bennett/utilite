@@ -3,11 +3,9 @@ utilite
 
 Patches and instructions for booting Fedora 21 on the Utilite
 
-*Not yet finished!*
+Notice: There may be a problem with setting the root password from the serial console on a graphical image. If this happens, you may need to mount the sd card on a desktop and add the hash to /etc/shadow, and or do the same for the sata drive from the sd card.
 
-*Not yet Tested!*
-
-This is currently not for the faint of heart. I believe that a serial connection is required for the initial setup. I am hopeful that the Fedora 21 stable Arm image will be much easier to work with. There is currently a bit of a convaluted bootstrapping process to get to a working system. These instructions are tested for the pro version only. I do have the other two Utilite models, but so far have only worked with the Pro.
+This is not for the faint of heart. I believe that a serial connection is required for the initial setup. I am hopeful that the Fedora 21 stable Arm image will be much easier to work with. There is currently a bit of a convaluted bootstrapping process to get to a working system. These instructions are tested for the pro version only. I do have the other two Utilite models, but so far have only worked with the Pro.
 
 First step is to grab the Fedora image and copy to your SD card. Instructions here: 
 http://fedoraproject.org/wiki/Architectures/ARM/F21_Alpha/Installation
@@ -59,9 +57,7 @@ setenv u_devpart 2:1
 
 boot
 
-This should boot into Fedora running on the SD card. 
-
-At this point we branch
+This should boot into Fedora running on the SD card.
 
 If you are installing to an internal sata drive, go ahead and dd the image to the sata drive, just like above.
 
