@@ -1,5 +1,5 @@
 diff --git a/board/compulab/cm_fx6/cm_fx6.c b/board/compulab/cm_fx6/cm_fx6.c
-index fdb8ebf..b3034eb 100644
+index fdb8ebf..40381a2 100644
 --- a/board/compulab/cm_fx6/cm_fx6.c
 +++ b/board/compulab/cm_fx6/cm_fx6.c
 @@ -316,12 +316,36 @@ static int handle_mac_address(void)
@@ -55,10 +55,10 @@ index fdb8ebf..b3034eb 100644
  #endif
  
 diff --git a/board/compulab/common/eeprom.c b/board/compulab/common/eeprom.c
-index 85442cd..99e0596 100644
+index 2df3ada..f063448 100644
 --- a/board/compulab/common/eeprom.c
 +++ b/board/compulab/common/eeprom.c
-@@ -46,6 +46,20 @@ static int cl_eeprom_read(uint offset, uchar *buf, int len)
+@@ -50,6 +50,20 @@ static int cl_eeprom_read(uint offset, uchar *buf, int len)
  	return res;
  }
  
@@ -79,7 +79,7 @@ index 85442cd..99e0596 100644
  static int cl_eeprom_setup_layout(void)
  {
  	int res;
-@@ -105,6 +119,19 @@ int cl_eeprom_read_mac_addr(uchar *buf)
+@@ -109,6 +123,19 @@ int cl_eeprom_read_mac_addr(uchar *buf)
  	return cl_eeprom_read(offset, buf, 6);
  }
  
@@ -111,11 +111,82 @@ index 85d5bf0..3f16218 100644
  u32 cl_eeprom_get_board_rev(void);
  #else
  static inline int cl_eeprom_read_mac_addr(uchar *buf)
+diff --git a/common/spl/spl.c b/common/spl/spl.c
+index b16664f..193fee3 100644
+--- a/common/spl/spl.c
++++ b/common/spl/spl.c
+@@ -163,8 +163,10 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
+ 	case BOOT_DEVICE_MMC1:
+ 	case BOOT_DEVICE_MMC2:
+ 	case BOOT_DEVICE_MMC2_2:
+-		spl_mmc_load_image();
+-		break;
++		if(!spl_mmc_load_image())
++			break;
++		else
++			puts("MMC boot failed, booting from SPI flash\n");
+ #endif
+ #ifdef CONFIG_SPL_NAND_SUPPORT
+ 	case BOOT_DEVICE_NAND:
+diff --git a/common/spl/spl_mmc.c b/common/spl/spl_mmc.c
+index fa6f891..9899d29 100644
+--- a/common/spl/spl_mmc.c
++++ b/common/spl/spl_mmc.c
+@@ -68,7 +68,7 @@ static int mmc_load_image_raw_os(struct mmc *mmc)
+ }
+ #endif
+ 
+-void spl_mmc_load_image(void)
++int spl_mmc_load_image(void)
+ {
+ 	struct mmc *mmc;
+ 	int err;
+@@ -81,7 +81,7 @@ void spl_mmc_load_image(void)
+ #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+ 		puts("spl: mmc device not found!!\n");
+ #endif
+-		hang();
++		return -1;
+ 	}
+ 
+ 	err = mmc_init(mmc);
+@@ -89,7 +89,7 @@ void spl_mmc_load_image(void)
+ #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+ 		printf("spl: mmc init failed: err - %d\n", err);
+ #endif
+-		hang();
++		return -1;
+ 	}
+ 
+ 	boot_mode = spl_boot_mode();
+@@ -127,7 +127,7 @@ void spl_mmc_load_image(void)
+ #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+ 			puts("MMC partition switch failed\n");
+ #endif
+-			hang();
++			return -1;
+ 		}
+ #ifdef CONFIG_SPL_OS_BOOT
+ 		if (spl_start_uboot() || mmc_load_image_raw_os(mmc))
+@@ -139,9 +139,11 @@ void spl_mmc_load_image(void)
+ #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+ 		puts("spl: wrong MMC boot mode\n");
+ #endif
+-		hang();
++		return -1;
+ 	}
+ 
+ 	if (err)
+-		hang();
++		return -1;
++
++	return 0;
+ }
 diff --git a/include/configs/cm_fx6.h b/include/configs/cm_fx6.h
-index 10d02b4..695c0fa 100644
+index 7cf241e..2b9643d 100644
 --- a/include/configs/cm_fx6.h
 +++ b/include/configs/cm_fx6.h
-@@ -245,6 +245,7 @@
+@@ -244,6 +244,7 @@
  #define CONFIG_SYS_I2C_EEPROM_ADDR	0x50
  #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN	1
  #define CONFIG_SYS_I2C_EEPROM_BUS	2
@@ -123,3 +194,16 @@ index 10d02b4..695c0fa 100644
  
  /* SATA */
  #define CONFIG_CMD_SATA
+diff --git a/include/spl.h b/include/spl.h
+index a7e41da..ce6a8ad 100644
+--- a/include/spl.h
++++ b/include/spl.h
+@@ -51,7 +51,7 @@ void spl_onenand_load_image(void);
+ void spl_nor_load_image(void);
+ 
+ /* MMC SPL functions */
+-void spl_mmc_load_image(void);
++int spl_mmc_load_image(void);
+ 
+ /* YMODEM SPL functions */
+ void spl_ymodem_load_image(void);

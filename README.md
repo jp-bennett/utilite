@@ -61,7 +61,13 @@ This should boot into Fedora running on the SD card.
 
 If you are installing to an internal sata drive, go ahead and dd the image to the sata drive, just like above.
 
-Also, if installing to the sata drive, u-boot currently dies without an sd-card in the drive. I will eventually fix this, but for now, I have a blank 256 meg sd card with the u-boot firmware written to it. If you are installing to the sata card, you'll want to do the same. You need boot onto the sata card to continue. Power down and swap to the u-boot only sd card. The boot commands for sata are: 
+To boot into sata instead of the sd card, first interrupt the u-boot auto boot to prevent the boot.scr on the sdcard from running. Then, the boot commands for sata are: 
+
+sata init
+
+run loadsatabootscript
+
+run satabootscript
 
 setenv catcat setenv catout\;'setenv catX setenv catout '\\\\\\\"''\$\$catin'\\\\\\\"''' \; run catX
 
@@ -78,7 +84,9 @@ setenv u_iodevs sata
 boot
 
 
-Whether booting from the sata or sd card, copy a-b-c patch to /etc/ and run "patch -p1 < a-b-c.patch". Run a-b-c. Now your utilite should autoboot without having to muck around in u-boot.
+Next we update the boot script builder. Copy a-b-c patch to /etc/ and run "patch -p1 < a-b-c.patch". Run a-b-c. 
+If you are booting from the sd-card, it should autoboot without having to muck around in u-boot. 
+If booting from the sata drive, we need to update u-boot on the spi first, but that requires the new kernel.
 
 
 Next up we compile the new kernel. I am using 3.18.0-0-rc1. A few tweaks might be in order for newer kernels.
@@ -98,6 +106,11 @@ This takes about 45 minutes on my machine. Next, copy the kernel, kernel-core, k
 
 Install these 4 packages, and reboot. Your utilite should come up and be ready for action.
 
+To update u-boot on the spi chip, do a yum install mtd-utils, and them modprobe m25p80. It's easiest to use the compulab supplied update script. 
+http://utilite-computer.com/download/utilite/u-boot/utilite-updater.tar.bz2
+
+Copy this to the utilite and extract the files. Replace the bundled firmware file with the you compiled earlier. Run it and let it do the update. At this point, you *should* be able to boot the sata drive 
+without an sd-card.
 
 Notice: I have quite possibly overlooked something. Any additions or corrections are welcome.
 
