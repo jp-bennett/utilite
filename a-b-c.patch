@@ -1,7 +1,7 @@
-diff --git a/src/a-b-c/a-b-c.d/19-config-adds b/src/a-b-c/a-b-c.d/19-config-adds
+diff --git a/a-b-c.d/19-config-adds b/a-b-c.d/19-config-adds
 index 6668c5b..fd25b16 100644
---- a/src/a-b-c/a-b-c.d/19-config-adds
-+++ b/src/a-b-c/a-b-c.d/19-config-adds
+--- a/a-b-c.d/19-config-adds
++++ b/a-b-c.d/19-config-adds
 @@ -18,7 +18,7 @@ c_add midway 'run config_calxeda; u_dtb=ecx-2000.dtb'
  
  #Freescale i.MX such as Wandboard and Utilite
@@ -11,10 +11,10 @@ index 6668c5b..fd25b16 100644
  c_add wandboard 'run config_imx; setenv u_dtb \$fdt_file'
  c_add cubox 'run config_imx; setenv u_dtb \$fdt_file'
  
-diff --git a/src/a-b-c/a-b-c.d/21-autodetect b/src/a-b-c/a-b-c.d/21-autodetect
+diff --git a/a-b-c.d/21-autodetect b/a-b-c.d/21-autodetect
 index 41097de..0283b65 100644
---- a/src/a-b-c/a-b-c.d/21-autodetect
-+++ b/src/a-b-c/a-b-c.d/21-autodetect
+--- a/a-b-c.d/21-autodetect
++++ b/a-b-c.d/21-autodetect
 @@ -29,6 +29,10 @@ elif test -n \$fdt_file; then
    if test \$fdt_file = imx6q-wandboard.dtb; then
      run config_wandboard
@@ -26,10 +26,10 @@ index 41097de..0283b65 100644
  elif test -n \$ethact; then
    if test \$ethact = asx0; then
      run config_arndale
-diff --git a/src/a-b-c/a-b-c.d/85-static-routines b/src/a-b-c/a-b-c.d/85-static-routines
+diff --git a/a-b-c.d/85-static-routines b/a-b-c.d/85-static-routines
 index d46b198..c982d08 100644
---- a/src/a-b-c/a-b-c.d/85-static-routines
-+++ b/src/a-b-c/a-b-c.d/85-static-routines
+--- a/a-b-c.d/85-static-routines
++++ b/a-b-c.d/85-static-routines
 @@ -6,7 +6,7 @@ cat << EOF
  setenv showdefs 'echo ""; echo "The following configuration values are defined:"; echo u_k_addr: \$u_k_addr; echo u_k_addr: \$u_k_addr; echo u_ramfs_addr: \$u_ramfs_addr; echo u_dtb_addr: \$u_dtb_addr; echo u_iodevs: \$u_iodevs; echo u_iodevs: \$u_iodevs; echo u_fs: \$u_fs; echo u_devpart: \$u_devpart; echo u_boot: \$u_boot; echo u_root: \$u_root; echo u_dtb: \$u_dtb; echo skip_dtb: \$skip_dtb (null means a dtb will be loaded); echo pass_dtb: \$pass_dtb (null means no bootarg passed); echo u_extraargs: \$u_extraargs'
  
