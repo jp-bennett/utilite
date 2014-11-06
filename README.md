@@ -85,4 +85,24 @@ boot
 Whether booting from the sata or sd card, copy a-b-c patch to /etc/ and run "patch -p1 < a-b-c.patch". Run a-b-c. Now your utilite should autoboot without having to muck around in u-boot.
 
 
-build kernel, install kernel. Possibly done.
+Next up we compile the new kernel. I am using 3.18.0-0-rc1. A few tweaks might be in order for newer kernels.
+
+I am assuming that you will be building on a Fedora x86_64 machine. We'll follow this guide: https://fedoraproject.org/wiki/Building_a_custom_kernel.
+After installing the src.rpm, cp the kernel patch into ~/rpmbuild/SOURCES/ which will overwrite the fedora patch for the utilite.
+The sound driver requires a .config change. In the file ~/rpmbuild/SOURCES/config-armv7, find the line: CONFIG_SND_SOC_IMX_WM8962=m
+Under that line, add:
+
+CONFIG_SND_SOC_IMX_WM8731=m 
+
+Now you're ready to build. The command is:
+
+rpmbuild -bb --with cross --target=armv7hl --without perf --without pae ~/rpmbuild/SPECS/kernel.spec
+
+This takes about 45 minutes on my machine. Next, copy the kernel, kernel-core, kernel-modules, and kernel-modules-extra rpms from the RPMS folder to the utilite. I have been using scp to copy it across.
+
+Install these 4 packages, and reboot. Your utilite should come up and be ready for action.
+
+
+Notice: I have quite possibly overlooked something. Any additions or corrections are welcome.
+
+~Jonathan Bennett
