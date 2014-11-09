@@ -840,7 +840,7 @@ index e9f3646..f7eba70 100644
  			clocks = <&clks IMX6QDL_CLK_OCRAM>;
  		};
  
-+/*		gpu_subsystem {
++		gpu_subsystem {
 +			#address-cells = <1>;
 +			#size-cells = <1>;
 +			compatible = "vivante,gccore";
@@ -864,7 +864,7 @@ index e9f3646..f7eba70 100644
 +				reg = <0x00130000 0x4000>;
 +			};
 +		};
-+*/
++
  		aips-bus@02000000 { /* AIPS1 */
  			spba-bus@02000000 {
  				ecspi5: ecspi@02018000 {
@@ -2397,7 +2397,7 @@ index 0000000..4cc6944
 +}
 diff --git a/drivers/staging/etnaviv/etnaviv_drv.c b/drivers/staging/etnaviv/etnaviv_drv.c
 new file mode 100644
-index 0000000..7626605
+index 0000000..6cc5ee6
 --- /dev/null
 +++ b/drivers/staging/etnaviv/etnaviv_drv.c
 @@ -0,0 +1,688 @@
@@ -2420,11 +2420,11 @@ index 0000000..7626605
 +
 +#include <linux/component.h>
 +#include <linux/of_platform.h>
-+#include "drm_gem.h"
 +
 +#include "etnaviv_drv.h"
 +#include "etnaviv_gpu.h"
 +#include "etnaviv_mmu.h"
++#include "drm_gem.h"
 +
 +void etnaviv_register_mmu(struct drm_device *dev, struct etnaviv_iommu *mmu)
 +{
@@ -3091,7 +3091,7 @@ index 0000000..7626605
 +MODULE_DEVICE_TABLE(of, dt_match);
 diff --git a/drivers/staging/etnaviv/etnaviv_drv.h b/drivers/staging/etnaviv/etnaviv_drv.h
 new file mode 100644
-index 0000000..9e899d4
+index 0000000..c5fb6aa
 --- /dev/null
 +++ b/drivers/staging/etnaviv/etnaviv_drv.h
 @@ -0,0 +1,158 @@
@@ -3187,7 +3187,7 @@ index 0000000..9e899d4
 +void *msm_gem_prime_vmap(struct drm_gem_object *obj);
 +void msm_gem_prime_vunmap(struct drm_gem_object *obj, void *vaddr);
 +struct drm_gem_object *etnaviv_gem_prime_import_sg_table(struct drm_device *dev,
-+	size_t size, struct sg_table *sg);
++	struct dma_buf_attachment *attach, struct sg_table *sg);
 +int msm_gem_prime_pin(struct drm_gem_object *obj);
 +void msm_gem_prime_unpin(struct drm_gem_object *obj);
 +void *etnaviv_gem_vaddr_locked(struct drm_gem_object *obj);
@@ -4302,7 +4302,7 @@ index 0000000..e9fee7d
 +#endif /* __ETNAVIV_GEM_H__ */
 diff --git a/drivers/staging/etnaviv/etnaviv_gem_prime.c b/drivers/staging/etnaviv/etnaviv_gem_prime.c
 new file mode 100644
-index 0000000..3767fb5
+index 0000000..6a7a28f
 --- /dev/null
 +++ b/drivers/staging/etnaviv/etnaviv_gem_prime.c
 @@ -0,0 +1,118 @@
@@ -4391,18 +4391,18 @@ index 0000000..3767fb5
 +};
 +
 +struct drm_gem_object *etnaviv_gem_prime_import_sg_table(struct drm_device *dev,
-+	size_t size, struct sg_table *sgt)
++	struct dma_buf_attachment *attach, struct sg_table *sgt)
 +{
 +	struct etnaviv_gem_object *etnaviv_obj;
 +	int ret, npages;
 +
-+	size = PAGE_ALIGN(size);
++	attach->dmabuf->size = PAGE_ALIGN(attach->dmabuf->size);
 +
-+	ret = etnaviv_gem_new_private(dev, size, ETNA_BO_WC, &etnaviv_obj);
++	ret = etnaviv_gem_new_private(dev, attach->dmabuf->size, ETNA_BO_WC, &etnaviv_obj);
 +	if (ret < 0)
 +		return ERR_PTR(ret);
 +
-+	npages = size / PAGE_SIZE;
++	npages = attach->dmabuf->size / PAGE_SIZE;
 +
 +	etnaviv_obj->ops = &etnaviv_gem_prime_ops;
 +	etnaviv_obj->sgt = sgt;
