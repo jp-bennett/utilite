@@ -71,7 +71,7 @@ run loadsatabootscript
 
 run satabootscript
 
-setenv catcat setenv catout\;'setenv catX setenv catout '\\\\\\\"''\$\$catin'\\\\\\\"''' \; run catX
+setenv catcat setenv catout\; 'setenv catX setenv catout '\\$\$catin'' \; run catX
 
 run k1
 
